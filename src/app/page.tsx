@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -23,7 +24,7 @@ import { PerformanceMetrics } from "@/components/dashboard/PerformanceMetrics";
 import { DownloadModel } from "@/components/dashboard/DownloadModel";
 import type { DatasetRow, ColumnProfile, ColumnStatistic, Algorithm, PerformanceMetric, ColumnDataType } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutDashboard, BarChartBig, BrainCircuit, DownloadCloud, FileText, Activity } from "lucide-react";
+import { LayoutDashboard, BarChartBig, BrainCircuit, DownloadCloud, FileText, Activity, Gauge } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from 'papaparse'; // For CSV parsing
 
