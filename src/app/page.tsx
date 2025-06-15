@@ -24,7 +24,7 @@ import { PerformanceMetrics } from "@/components/dashboard/PerformanceMetrics";
 import { DownloadModel } from "@/components/dashboard/DownloadModel";
 import type { DatasetRow, ColumnProfile, ColumnStatistic, Algorithm, PerformanceMetric, ColumnDataType } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LayoutDashboard, BarChartBig, BrainCircuit, DownloadCloud, FileText, Activity, Gauge } from "lucide-react";
+import { LayoutDashboard, BarChartBig, BrainCircuit, DownloadCloud, FileText, Activity, Gauge, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Papa from 'papaparse'; // For CSV parsing
 
@@ -133,62 +133,70 @@ export default function DashboardPage() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<Algorithm | null>(null);
   const [modelTrained, setModelTrained] = useState(false);
   const [activeSection, setActiveSection] = useState("upload");
+  const [isLoadingDataset, setIsLoadingDataset] = useState(false);
   const { toast } = useToast();
 
-  const parseCSV = (file: File, callback: (data: DatasetRow[]) => void) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      dynamicTyping: true, // Automatically convert numbers, booleans
-      complete: (results) => {
-        // Filter out rows that are entirely null or undefined (often an issue with dynamicTyping and empty last lines)
-        const cleanedData = (results.data as DatasetRow[]).filter(row => 
-            Object.values(row).some(value => value !== null && value !== undefined)
-        );
-        callback(cleanedData);
-      },
-      error: (error: any) => {
-        toast({
-            title: "CSV Parsing Error",
-            description: error.message || "Could not parse the CSV file.",
-            variant: "destructive",
-        });
-        callback([]); // return empty dataset on error
-      }
-    });
-  };
-
-
   const handleDatasetSelect = useCallback((file: File) => {
-    // Basic file type check (though Input accept should handle this mostly)
+    setIsLoadingDataset(true);
+
     if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-       parseCSV(file, (parsedData) => {
-          setDataset(parsedData);
-          const profiles = calculateColumnProfiles(parsedData);
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true,
+        complete: (results) => {
+          const cleanedData = (results.data as DatasetRow[]).filter(row =>
+            Object.values(row).some(value => value !== null && value !== undefined)
+          );
+
+          if (cleanedData.length === 0 && file.size > 0) {
+            toast({
+              title: "Processing Issue",
+              description: "The CSV file appears to be empty or could not be processed correctly.",
+              variant: "destructive",
+            });
+            setDataset([]);
+            setColumnProfiles([]);
+            setIsLoadingDataset(false);
+            return;
+          }
+
+          const profiles = calculateColumnProfiles(cleanedData);
+          setDataset(cleanedData);
           setColumnProfiles(profiles);
           setModelTrained(false);
           setPerformanceMetrics([]);
-          setActiveSection("preview"); // Move to preview after upload
-           toast({
+          setActiveSection("preview");
+          toast({
             title: "Dataset Loaded",
             description: `${file.name} has been successfully processed.`,
           });
-       });
-    } else {
-        // For simplicity, we'll only fully support CSV for now.
-        // Excel parsing would require a library like 'xlsx'.
-        toast({
-            title: "File Type Not Fully Supported",
-            description: "CSV files are recommended. For other types, functionality might be limited (using mock data).",
+          setIsLoadingDataset(false);
+        },
+        error: (error: any) => {
+          toast({
+            title: "CSV Parsing Error",
+            description: error.message || "Could not parse the CSV file.",
             variant: "destructive",
-        });
-        // Fallback to mock data if not CSV for demo purposes
-        const mockData = generateMockDataset();
-        setDataset(mockData);
-        setColumnProfiles(calculateColumnProfiles(mockData));
-        setModelTrained(false);
-        setPerformanceMetrics([]);
-        setActiveSection("preview");
+          });
+          setDataset([]);
+          setColumnProfiles([]);
+          setIsLoadingDataset(false);
+        }
+      });
+    } else {
+      toast({
+        title: "File Type Not Supported",
+        description: "Please upload a CSV file. Using mock data for now.",
+        variant: "destructive",
+      });
+      const mockData = generateMockDataset();
+      setDataset(mockData);
+      setColumnProfiles(calculateColumnProfiles(mockData));
+      setModelTrained(false);
+      setPerformanceMetrics([]);
+      setActiveSection("preview");
+      setIsLoadingDataset(false);
     }
   }, [toast]);
 
@@ -260,7 +268,7 @@ export default function DashboardPage() {
           <ScrollArea className="h-[calc(100vh-3.5rem)] sm:h-auto">
             <main className="flex-1 p-4 sm:p-6 space-y-6">
               <section id="upload">
-                <DatasetUpload onDatasetSelect={handleDatasetSelect} />
+                <DatasetUpload onDatasetSelect={handleDatasetSelect} isLoading={isLoadingDataset} />
               </section>
               <section id="preview">
                 <DatasetPreview dataset={dataset} />

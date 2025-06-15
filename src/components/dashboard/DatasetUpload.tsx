@@ -5,10 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, Loader2 } from "lucide-react";
 import React from "react";
 
-export function DatasetUpload({ onDatasetSelect }: { onDatasetSelect: (file: File) => void }) {
+export function DatasetUpload({ onDatasetSelect, isLoading }: { onDatasetSelect: (file: File) => void, isLoading?: boolean }) {
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,9 +20,6 @@ export function DatasetUpload({ onDatasetSelect }: { onDatasetSelect: (file: Fil
   const handleUpload = () => {
     if (selectedFile) {
       onDatasetSelect(selectedFile);
-      // Here you would typically handle the file upload to a server
-      // For this example, we'll just log it and pass to parent
-      console.log("Uploading file:", selectedFile.name);
     }
   };
 
@@ -46,12 +43,21 @@ export function DatasetUpload({ onDatasetSelect }: { onDatasetSelect: (file: Fil
             accept=".csv" 
             onChange={handleFileChange}
             className="file:text-primary file:font-semibold"
+            disabled={isLoading}
           />
         </div>
-        {selectedFile && <p className="text-sm text-muted-foreground">Selected: {selectedFile.name}</p>}
-        <Button onClick={handleUpload} disabled={!selectedFile} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-          <UploadCloud className="mr-2 h-4 w-4" />
-          Load Dataset
+        {selectedFile && !isLoading && <p className="text-sm text-muted-foreground">Selected: {selectedFile.name}</p>}
+        <Button 
+          onClick={handleUpload} 
+          disabled={!selectedFile || isLoading} 
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <UploadCloud className="mr-2 h-4 w-4" />
+          )}
+          {isLoading ? "Loading..." : "Load Dataset"}
         </Button>
       </CardContent>
     </Card>
