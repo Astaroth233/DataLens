@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +34,7 @@ export function DatasetUpload({ onDatasetSelect }: { onDatasetSelect: (file: Fil
           Upload Dataset
         </CardTitle>
         <CardDescription>
-          Select a CSV or Excel file to begin your analysis.
+          Select a CSV file to begin your analysis.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -42,7 +43,7 @@ export function DatasetUpload({ onDatasetSelect }: { onDatasetSelect: (file: Fil
           <Input 
             id="dataset-file" 
             type="file" 
-            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+            accept=".csv" 
             onChange={handleFileChange}
             className="file:text-primary file:font-semibold"
           />
